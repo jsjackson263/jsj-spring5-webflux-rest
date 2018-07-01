@@ -95,6 +95,23 @@ public class CategoryControllerTest {
 		
 	}
 	
+	@Test
+	public void testUpdateCategory() throws Exception {
+
+		BDDMockito.given(categoryRepository.save(any(Category.class)))
+		.willReturn(Mono.just(Category.builder().build()));
+		
+		Mono<Category> categoryToUpdate = Mono.just(Category.builder().description("Some category description").build());
+		
+		webTestClient.put()
+		.uri("/api/v1/categories/abcdef")
+		.body(categoryToUpdate, Category.class)
+		.exchange()
+		.expectStatus()
+		.isOk();
+		
+	}
+	
 	
 	
 	
