@@ -4,13 +4,16 @@
 package info.jsjackson.controllers;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import info.jsjackson.domain.Category;
 import info.jsjackson.domain.Vendor;
 import info.jsjackson.repositories.VendorRepository;
 import reactor.core.publisher.Flux;
@@ -71,8 +74,43 @@ public class VendorControllerTest {
 		.isEqualTo(vendor)
 		.returnResult();
 		
-				
+	}
+	
+	@Test
+	public void testCreateVendor() throws Exception {
 
+		BDDMockito.given(vendorRepository.saveAll(any(Publisher.class)))
+		.willReturn(Flux.just(Vendor.builder().build()));
+		
+		Mono<Vendor> vendorMonoToSave = Mono.just(Vendor.builder()
+				.firstName("SomeFirstName")
+				.lastName("SomeLastName")
+				.build());
+		
+		webTestClient.post()
+		.uri("/api/v1/vendors")
+		.body(vendorMonoToSave, Vendor.class)
+		.exchange()
+		.expectStatus()
+		.isCreated();
+		
 	}
 
+	
+	@Test
+	public void testUpdateVendor() throws Exception {
+		
+		BDDMockito.given(vendorRepository.save(any(Vendor.class)))
+		.willReturn(Mono.just(Vendor.builder().build()));
+		
+		Mono<Vendor> vendorMonoToUpdate = Mono.just(Vendor.builder()
+				.firstName("SomeForstName")
+				.lastName("SomeLastName")
+				.build());
+		
+		webTestClient.put().uri("/api/v1/vendors/abcdef")
+		.body(vendorMonoToUpdate, Vendor.class)
+		.exchange().expectStatus()
+		.isOk();
+	}
 }
