@@ -6,6 +6,7 @@ package info.jsjackson.controllers;
 import org.reactivestreams.Publisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -64,4 +65,22 @@ public class VendorController {
 		return vendorRepository.save(vendor);
 		
 	}
+	
+	@PatchMapping("/api/v1/vendors/{id}")
+	Mono<Vendor> patch(@PathVariable String id, @RequestBody Vendor vendor) {  //not reactive
+		
+		Vendor foundVendor = vendorRepository.findById(id).block();
+		if (!foundVendor.getFirstName().equals(vendor.getFirstName()) 
+				|| !foundVendor.getLastName().equals(vendor.getLastName())) {
+			
+			vendor.setFirstName(foundVendor.getFirstName());
+			vendor.setLastName(foundVendor.getLastName());
+			return vendorRepository.save(vendor);
+		}
+		
+		return Mono.just(foundVendor);
+		
+		
+	}
+	
 }

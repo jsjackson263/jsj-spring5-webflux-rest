@@ -3,8 +3,11 @@
  */
 package info.jsjackson.controllers;
 
-import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +16,6 @@ import org.mockito.Mockito;
 import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import info.jsjackson.domain.Category;
 import info.jsjackson.domain.Vendor;
 import info.jsjackson.repositories.VendorRepository;
 import reactor.core.publisher.Flux;
@@ -104,7 +106,7 @@ public class VendorControllerTest {
 		.willReturn(Mono.just(Vendor.builder().build()));
 		
 		Mono<Vendor> vendorMonoToUpdate = Mono.just(Vendor.builder()
-				.firstName("SomeForstName")
+				.firstName("SomeFirstName")
 				.lastName("SomeLastName")
 				.build());
 		
@@ -113,4 +115,64 @@ public class VendorControllerTest {
 		.exchange().expectStatus()
 		.isOk();
 	}
+	
+	@Test
+	public void testPatchVendorWithChanges() throws Exception {
+
+		given(vendorRepository.findById(anyString()))
+		.willReturn(Mono.just(Vendor.builder()
+				.firstName("OldFirstName")
+				.lastName("OldLastName").build()));
+		
+		
+		given(vendorRepository.save(any(Vendor.class)))
+		.willReturn(Mono.just(Vendor.builder().build()));
+		
+		Mono<Vendor> vendorMonoToUpdate = Mono.just(Vendor.builder()
+				.firstName("NewFirstName")
+				.lastName("NewLastName").build());
+		
+		webTestClient.patch()
+		.uri("/api/v1/vendors/someid")
+		.body(vendorMonoToUpdate, Vendor.class)
+		.exchange()
+		.expectStatus()
+		.isOk();
+		
+		
+		//make sure 'save' was run
+		verify(vendorRepository).save(any());
+	}
+	
+	@Test
+	public void testPatchVendorNoChanges() throws Exception {
+
+		given(vendorRepository.findById(anyString()))
+		.willReturn(Mono.just(Vendor.builder()
+				.firstName("OldFirstName")
+				.lastName("OldLastName")
+				.build()));
+		
+		
+		given(vendorRepository.save(any(Vendor.class)))
+		.willReturn(Mono.just(Vendor.builder().build()));
+		
+		Mono<Vendor> vendorMonoToUpdate = Mono.just(Vendor.builder()
+				.firstName("OldFirstName")
+				.lastName("OldLastName")
+				.build());
+		
+		webTestClient.patch()
+		.uri("/api/v1/vendors/someid")
+		.body(vendorMonoToUpdate, Vendor.class)
+		.exchange()
+		.expectStatus()
+		.isOk();
+		
+		
+		//no changes, hence no save
+		verify(vendorRepository, never()).save(any());
+	}
+	
+	
 }
