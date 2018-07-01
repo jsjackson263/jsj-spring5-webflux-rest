@@ -4,6 +4,10 @@
 package info.jsjackson.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -112,9 +116,53 @@ public class CategoryControllerTest {
 		
 	}
 	
+	@Test
+	public void testPatchCategoryWithChanges() throws Exception {
+
+		given(categoryRepository.findById(anyString()))
+		.willReturn(Mono.just(Category.builder().build()));
+		
+		
+		given(categoryRepository.save(any(Category.class)))
+		.willReturn(Mono.just(Category.builder().build()));
+		
+		Mono<Category> categoryMonoToUpdate = Mono.just(Category.builder().description("New description").build());
+		
+		webTestClient.patch()
+		.uri("/api/v1/categories/someid")
+		.body(categoryMonoToUpdate, Category.class)
+		.exchange()
+		.expectStatus()
+		.isOk();
+		
+		
+		//make sure 'save' was run
+		verify(categoryRepository).save(any());
+	}
 	
-	
-	
+	@Test
+	public void testPatchCategoryNoChanges() throws Exception {
+
+		given(categoryRepository.findById(anyString()))
+		.willReturn(Mono.just(Category.builder().build()));
+		
+		
+		given(categoryRepository.save(any(Category.class)))
+		.willReturn(Mono.just(Category.builder().build()));
+		
+		Mono<Category> categoryMonoToUpdate = Mono.just(Category.builder().build());
+		
+		webTestClient.patch()
+		.uri("/api/v1/categories/someid")
+		.body(categoryMonoToUpdate, Category.class)
+		.exchange()
+		.expectStatus()
+		.isOk();
+		
+		
+		//no changes, hence no save
+		verify(categoryRepository, never()).save(any());
+	}
 	
 
 }
