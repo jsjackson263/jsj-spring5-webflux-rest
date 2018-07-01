@@ -3,12 +3,13 @@
  */
 package info.jsjackson.controllers;
 
-import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import info.jsjackson.domain.Category;
@@ -42,7 +43,7 @@ public class CategoryControllerTest {
 	}
 
 	@Test
-	public void testList() {
+	public void testList() throws Exception {
 
 		BDDMockito.given(categoryRepository.findAll())
 		.willReturn(Flux.just(Category.builder().description("Category 1").build(), 
@@ -52,6 +53,8 @@ public class CategoryControllerTest {
 		webTestClient.get()
 			.uri("/api/v1/categories/")
 			.exchange()
+			.expectStatus()
+			.isOk()
 			.expectBodyList(Category.class)
 			.hasSize(3)
 			.returnResult();
@@ -59,7 +62,7 @@ public class CategoryControllerTest {
 	}
 
 	@Test
-	public void testGetById() {
+	public void testGetById() throws Exception {
 
 		BDDMockito.given(categoryRepository.findById("someid"))
 		.willReturn(Mono.just(Category.builder().description("Category 1").build()));
@@ -67,11 +70,34 @@ public class CategoryControllerTest {
 		webTestClient.get()
 		.uri("/api/v1/categories/someid")
 		.exchange()
+		.expectStatus()
+		.isOk()
 		.expectBody(Category.class)
 		.returnResult();
 		
-	
-	
 	}
+	
+	
+	@Test
+	public void testCreateCategory() throws Exception {
+
+		BDDMockito.given(categoryRepository.saveAll(any(Publisher.class)))
+		.willReturn(Flux.just(Category.builder().build()));
+		
+		Mono<Category> categoryToSaveMono = Mono.just(Category.builder().description("Some category description").build());
+		
+		webTestClient.post()
+		.uri("/api/v1/categories")
+		.body(categoryToSaveMono, Category.class)
+		.exchange()
+		.expectStatus()
+		.isCreated();
+		
+	}
+	
+	
+	
+	
+	
 
 }

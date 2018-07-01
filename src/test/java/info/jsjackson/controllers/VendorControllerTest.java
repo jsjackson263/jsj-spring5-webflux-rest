@@ -40,7 +40,7 @@ public class VendorControllerTest {
 	}
 
 	@Test
-	public void testListAll() {
+	public void testListAll() throws Exception {
 
 		BDDMockito.given(vendorRepository.findAll())
 		.willReturn(Flux.just(Vendor.builder().firstName("VendorFirstName1").lastName("VendorLastName1").build(),
@@ -56,7 +56,7 @@ public class VendorControllerTest {
 	}
 
 	@Test
-	public void testFindById() {
+	public void testFindById() throws Exception {
 
 		Vendor vendor  = Vendor.builder().firstName("VendorFirstName1").lastName("VendorLastName1").build();
 		
@@ -65,12 +65,14 @@ public class VendorControllerTest {
 	
 		webTestClient.get().uri("/api/v1/vendors/someid")
 		.exchange()
+		.expectStatus()
+		.isOk()
 		.expectBody(Vendor.class)
 		.isEqualTo(vendor)
 		.returnResult();
 		
 				
-	
+
 	}
 
 }
